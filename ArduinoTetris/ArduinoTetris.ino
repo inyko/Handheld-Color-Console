@@ -1,6 +1,9 @@
 /*
+ * 2016 Moon On Our Nation
+ * port to Ucglib for support more device
+ * 
     Arduino Tetris
-    Copyright (C) 2015  João André Esteves Vilaça
+    Copyright (C) 2015  Joï¿½o Andrï¿½ Esteves Vilaï¿½a
 
     https://github.com/vilaca/Handheld-Color-Console
 
@@ -19,8 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "TFTv2_extended.h"
 #include <SPI.h>
+#include "Ucglib.h"
+#include "display.h"
+
+#ifdef ARDUINO_AVR_ESPLORA
+  #include <Esplora.h>
+#endif
 
 #include "joystick.cpp"
 #include "beeping.cpp"
@@ -28,14 +36,11 @@
 #include "sequencer.cpp"
 
 void setup() {
-
   Sequencer::init();
 
-  TFT_BL_ON;      // turn on the background light
+  Disp.init();  // init display library
 
-  Tft.init();  // init TFT library
-
-  // play turnon sound	
+  // play turnon sound
   Beeping::turnOn();
 
   // initialize joystick
@@ -43,9 +48,10 @@ void setup() {
 }
 
 void loop() {
+  Tetris t;
 
   // title screen
-  drawPreGameScreen();
+  t.drawPreGameScreen();
 
   // wait a bit before playing sounds
   delay(700);
@@ -60,40 +66,14 @@ void loop() {
   Sequencer::stop();
 
   // load game
-  Tetris t;
   t.run();
 
   // game ended
-  gameOver();
+  t.gameOver();
 }
-
-void drawPreGameScreen()
-{
-  Tft.fillScreen(WHITE);
-  Tft.drawCenteredString("Tetris", 40, 8, BLUE);
-  Tft.drawCenteredString("Click to play", 110, 2, BLACK);
-  Tft.drawCenteredString("http://vilaca.eu", 220, 2, PURPLE);
-}
-
-
-void gameOver()
-{
-  Tft.fillRectangle(32, 84, 256, 52, BLACK);
-  Tft.drawString("Game Over", 48, 94, 4, 0x3ffff);
-  Tft.drawRectangle(32, 84, 256, 52, RED);
-
-  Beeping::beep(600, 200);
-  delay(300);
-  Beeping::beep(600, 200);
-  delay(300);
-  Beeping::beep(200, 600);
-  delay(1500);
-  Joystick::waitForClick();
-}
-
 
 ISR(TIMER1_COMPA_vect) {
-
   // sequencer plays tetris theme
   Sequencer::play();
 }
+

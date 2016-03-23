@@ -1,7 +1,10 @@
 /*
+ * 2016 Moon On Our Nation
+ * port to Ucglib for support more device
+ * 
     Arduino Tetris
-    Copyright (C) 2015 João André Esteves Vilaça 
-    
+    Copyright (C) 2015 João André Esteves Vilaça
+
     https://github.com/vilaca/Handheld-Color-Console
 
     This program is free software; you can redistribute it and/or modify
@@ -24,25 +27,35 @@
 
 #include <Arduino.h>
 
-// analog pins
+#ifdef ARDUINO_AVR_ESPLORA
+  #include <Esplora.h>
+#elif ARDUINO_AVR_LEONARDO
+  #define UP_PIN 2
+  #define DW_PIN 3
+  #define LF_PIN 4
+  #define RG_PIN 5
+  #define A_PIN 6
+  #define B_PIN 7
+  #define C_PIN 8
+  #define D_PIN 9
+#else
+  // analog pins
+  #define XPIN        0
+  #define YPIN        1
 
-#define XPIN        0
-#define YPIN        1
+  // digital pin
+  #define FIREPIN     2
 
-// digital pin
-
-#define FIREPIN     2
-
-// joystick center for both axis
-
-#define CENTER      512
+  // joystick center for both axis
+  #define CENTER      512
+#endif
 
 class Joystick
 {
   public:
 
-    // joystick position constants 
-    
+    // joystick position constants
+
     static const int NEUTRAL = 0;
     static const int SOFT = 1;
     static const int HARD = 2;
@@ -50,22 +63,48 @@ class Joystick
 
     static void init ()
     {
-      pinMode ( FIREPIN, INPUT_PULLUP );
+#ifdef ARDUINO_AVR_ESPLORA
+#elif ARDUINO_AVR_LEONARDO
+      pinMode(A_PIN, INPUT_PULLUP);
+      pinMode(B_PIN, INPUT_PULLUP);
+      pinMode(C_PIN, INPUT_PULLUP);
+      pinMode(D_PIN, INPUT_PULLUP);
+#else
+      pinMode(FIREPIN, INPUT_PULLUP);
+#endif
     }
 
     static int getX()
     {
+#ifdef ARDUINO_AVR_ESPLORA
+      return (Esplora.readJoystickX() / 128) * -1;
+#elif ARDUINO_AVR_LEONARDO
+      return (digitalRead(LF_PIN) == LOW) ? 8 : ((digitalRead(RG_PIN) == LOW) ? -8 : 0);
+#else
       return getPosition(XPIN) * -1;
+#endif
     }
 
     static int getY()
     {
+#ifdef ARDUINO_AVR_ESPLORA
+      return (Esplora.readJoystickY() / 128);
+#elif ARDUINO_AVR_LEONARDO
+      return (digitalRead(DW_PIN) == LOW) ? 8 : ((digitalRead(UP_PIN) == LOW) ? -8 : 0);
+#else
       return getPosition(YPIN) * -1;
+#endif
     }
 
     static boolean fire()
     {
+#ifdef ARDUINO_AVR_ESPLORA
+      return (Esplora.readButton(SWITCH_1) == LOW);
+#elif ARDUINO_AVR_LEONARDO
+      return digitalRead(A_PIN) == LOW;
+#else
       return digitalRead(FIREPIN) == LOW;
+#endif
     }
 
     static void waitForRelease()
@@ -91,13 +130,18 @@ class Joystick
 
   private:
 
+#ifdef ARDUINO_AVR_ESPLORA
+#elif ARDUINO_AVR_LEONARDO
+#else
     static int getPosition (int pin)
     {
       const int n = analogRead(pin) - CENTER;
 
       return n / 128;
     }
+#endif
 };
 
 #endif
+
 

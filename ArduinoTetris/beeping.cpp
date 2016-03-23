@@ -1,4 +1,7 @@
 /*
+ * 2016 Moon On Our Nation
+ * port to Ucglib for support more device
+ * 
     Arduino Tetris
     Copyright (C) 2015  João André Esteves Vilaça
 
@@ -24,7 +27,7 @@
 
 #include <Arduino.h>
 
-#define SPEAKER 3
+#define SPEAKER 6
 
 #define NOTE_B2	123
 #define NOTE_C3	131
@@ -127,3 +130,4 @@ class Beeping
 };
 
 #endif
+
