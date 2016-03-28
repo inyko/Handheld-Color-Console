@@ -29,15 +29,15 @@
 
 #ifdef ARDUINO_AVR_ESPLORA
   #include <Esplora.h>
-#elif ARDUINO_AVR_LEONARDO
+#elif ARDUINO_AVR_PROMICRO
   #define UP_PIN 2
   #define DW_PIN 3
   #define LF_PIN 4
   #define RG_PIN 5
-  #define A_PIN 6
-  #define B_PIN 7
+  #define D_PIN 6
+  #define A_PIN 7
   #define C_PIN 8
-  #define D_PIN 9
+  #define B_PIN 9
 #else
   // analog pins
   #define XPIN        0
@@ -64,7 +64,11 @@ class Joystick
     static void init ()
     {
 #ifdef ARDUINO_AVR_ESPLORA
-#elif ARDUINO_AVR_LEONARDO
+#elif ARDUINO_AVR_PROMICRO
+      pinMode(UP_PIN, INPUT_PULLUP);
+      pinMode(DW_PIN, INPUT_PULLUP);
+      pinMode(LF_PIN, INPUT_PULLUP);
+      pinMode(RG_PIN, INPUT_PULLUP);
       pinMode(A_PIN, INPUT_PULLUP);
       pinMode(B_PIN, INPUT_PULLUP);
       pinMode(C_PIN, INPUT_PULLUP);
@@ -78,8 +82,8 @@ class Joystick
     {
 #ifdef ARDUINO_AVR_ESPLORA
       return (Esplora.readJoystickX() / 128) * -1;
-#elif ARDUINO_AVR_LEONARDO
-      return (digitalRead(LF_PIN) == LOW) ? 8 : ((digitalRead(RG_PIN) == LOW) ? -8 : 0);
+#elif ARDUINO_AVR_PROMICRO
+      return (digitalRead(LF_PIN) == LOW) ? -2 : ((digitalRead(RG_PIN) == LOW) ? 2 : 0);
 #else
       return getPosition(XPIN) * -1;
 #endif
@@ -89,8 +93,8 @@ class Joystick
     {
 #ifdef ARDUINO_AVR_ESPLORA
       return (Esplora.readJoystickY() / 128);
-#elif ARDUINO_AVR_LEONARDO
-      return (digitalRead(DW_PIN) == LOW) ? 8 : ((digitalRead(UP_PIN) == LOW) ? -8 : 0);
+#elif ARDUINO_AVR_PROMICRO
+      return (digitalRead(UP_PIN) == LOW) ? -2 : ((digitalRead(DW_PIN) == LOW) ? 2 : 0);
 #else
       return getPosition(YPIN) * -1;
 #endif
@@ -100,8 +104,11 @@ class Joystick
     {
 #ifdef ARDUINO_AVR_ESPLORA
       return (Esplora.readButton(SWITCH_1) == LOW);
-#elif ARDUINO_AVR_LEONARDO
-      return digitalRead(A_PIN) == LOW;
+#elif ARDUINO_AVR_PROMICRO
+      return (digitalRead(A_PIN) == LOW)
+        | (digitalRead(B_PIN) == LOW)
+        | (digitalRead(C_PIN) == LOW)
+        | (digitalRead(D_PIN) == LOW);
 #else
       return digitalRead(FIREPIN) == LOW;
 #endif
@@ -131,7 +138,7 @@ class Joystick
   private:
 
 #ifdef ARDUINO_AVR_ESPLORA
-#elif ARDUINO_AVR_LEONARDO
+#elif ARDUINO_AVR_PROMICRO
 #else
     static int getPosition (int pin)
     {

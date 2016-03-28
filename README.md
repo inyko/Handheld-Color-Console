@@ -4,6 +4,14 @@ Handheld color console based on Atmega328 with Arduino bootloader.
 
 ![Prototype](http://vilaca.eu/handheld-arduino-color-console/arduino_color_tetris.png)
 
+##Support more hardware (Tetris Only)
+
+###Added support to Esplora and Pro Micro
+
+###Ported to Ucglib
+
+![Esplora Demo](https://youtu.be/A19qIs0M_po)
+
 ##Build instructions
 
 Detailed instructions are available at: http://vilaca.eu/handheld-arduino-color-console/

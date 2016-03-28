@@ -160,7 +160,8 @@ static const int song[] = {
   NOTE_C5, 4,
   NOTE_A4, 4,
 
-  NOTE_A4, 8,
+  NOTE_A4, 4,
+  NOTE_A3, 4,
   -1
 };
 

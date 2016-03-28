@@ -30,35 +30,46 @@
 #include "joystick.cpp"
 #include "beeping.cpp"
 
+#ifdef ARDUINO_AVR_ESPLORA
+  #define RANDOM_REFERENCE  4
+#elif ARDUINO_AVR_PROMICRO
+  #define RANDOM_REFERENCE  3
+#else
+  #define RANDOM_REFERENCE  2
+#endif
+
 #define MIN(X, Y)             (((X) < (Y)) ? (X) : (Y))
 
 #define BOARD_WIDTH           11
 #define BOARD_HEIGHT          20
 
-#define BLOCK_SIZE            MIN((MAX_X / BOARD_WIDTH), (MAX_Y / BOARD_HEIGHT))
+#define BLOCK_SIZE            MIN(((MAX_X - 2) / BOARD_WIDTH), ((MAX_Y - 2) / BOARD_HEIGHT))
 
-#define BOARD_LEFT            ((MAX_X + 1) - (BOARD_WIDTH * BLOCK_SIZE)) / 4 * 3
-#define BOARD_RIGHT           (BOARD_LEFT + BLOCK_SIZE * BOARD_WIDTH)
-#define BOARD_TOP             ((MAX_Y + 1) - BOARD_HEIGHT * BLOCK_SIZE) / 2
-#define BOARD_BOTTOM          (BOARD_TOP + BOARD_HEIGHT * BLOCK_SIZE)
+#define BOARD_TOP             (((MAX_Y + 1) - BOARD_HEIGHT * BLOCK_SIZE) / 2)
+#define BOARD_BOTTOM          ((BOARD_TOP + BOARD_HEIGHT * BLOCK_SIZE) - 1)
 
-#define MARGIN                MIN(BOARD_TOP, (MAX_X - BOARD_RIGHT))
-
-#define SCORE_BOARD_WIDTH (BOARD_LEFT - (MARGIN * 2))
-#define SCORE_BOARD_HEIGHT (MARGIN + FONT_1X_HEIGHT + MARGIN + FONT_1X_HEIGHT + MARGIN)
+#define MARGIN                MIN(BOARD_TOP, 2)
 
 #define NEXT_BOX_WIDTH (BLOCK_SIZE * 6)
 #define NEXT_BOX_HEIGHT (BLOCK_SIZE * 5)
-#define NEXT_BOX_LEFT ((BOARD_LEFT - NEXT_BOX_WIDTH) / 2)
-#define NEXT_BOX_TOP ((MAX_Y - NEXT_BOX_HEIGHT) / 3 * 2)
+#define NEXT_BOX_LEFT (MAX_X - MARGIN - NEXT_BOX_WIDTH)
+#define NEXT_BOX_TOP MARGIN
 
-#define PIT_COLOR             CYAN
+#define GAME_OVER_TOP ((MAX_Y - (FONT_4X_HEIGHT * 2) - MARGIN) / 2)
+
+#define BOARD_RIGHT           (NEXT_BOX_LEFT - (MARGIN * 2) - 2)
+#define BOARD_LEFT            (BOARD_RIGHT - (BOARD_WIDTH * BLOCK_SIZE) + 1 )
+
+#define SCORE_BOARD_WIDTH (BOARD_LEFT - (MARGIN * 3))
+#define SCORE_BOARD_HEIGHT ((MARGIN *5) + (FONT_1X_HEIGHT * 4))
+
+#define PIT_COLOR             WHITE
 #define BG_COLOR              BLACK
 
 #define DROP_WAIT_INIT        1100
 
 #define INPUT_WAIT_ROT        300
-#define INPUT_WAIT_MOVE       150
+#define INPUT_WAIT_MOVE       500
 
 #define INPUT_WAIT_NEW_SHAPE  400
 
@@ -116,7 +127,7 @@ class Tetris
 
     byte *all_shapes[7] = {l_shape[0][0], j_shape[0][0], o_shape[0][0], s_shape[0][0], z_shape[0][0], t_shape[0][0], i_shape[0][0]};
 
-    unsigned int colors[7] = {PURPLE, BLUE, YELLOW, GREEN, RED, MAGENTA, CYAN};
+    unsigned int colors[7] = {ORANGE, BLUE, YELLOW, GREEN, RED, MAGENTA, CYAN};
 
 
     // how many rotated variations each shape has
@@ -165,9 +176,9 @@ class Tetris
 
     void run()
     {
-      // analog 2 MUST NOT be connected to anything...
+      // RANDOM_REFERENCE analog pin MUST NOT be connected to anything...
 
-      randomSeed(analogRead(2));
+      randomSeed(analogRead(RANDOM_REFERENCE));
 
       // clear board
 
@@ -189,23 +200,14 @@ class Tetris
       lastDrop = 0;
       dropWait = DROP_WAIT_INIT;
       level = 1;
+      newShape = true;
 
       // draw background
       Disp.drawGradientBox(0, 0, MAX_X + 1, MAX_Y + 1, BLUE, CYAN, RED, GREEN);
 
       // draw board
-      Disp.drawRectangle(BOARD_LEFT - 1, BOARD_TOP - 1, BOARD_RIGHT - BOARD_LEFT + 1, BOARD_BOTTOM - BOARD_TOP + 1, PIT_COLOR);
-      Disp.fillRectangle(BOARD_LEFT, BOARD_TOP, BOARD_RIGHT - BOARD_LEFT - 1, BOARD_BOTTOM - BOARD_TOP - 1, BG_COLOR);
-
-      for ( int i = BOARD_LEFT + BLOCK_SIZE - 1; i < BOARD_RIGHT; i += BLOCK_SIZE)
-      {
-        Disp.drawVerticalLine(i, BOARD_TOP, BOARD_BOTTOM - BOARD_TOP - 1, GRAY2);
-      }
-
-      for ( int i = BOARD_TOP + BLOCK_SIZE - 1; i < BOARD_BOTTOM; i += BLOCK_SIZE)
-      {
-        Disp.drawHorizontalLine(BOARD_LEFT, i, BOARD_RIGHT - BOARD_LEFT - 1, GRAY2);
-      }
+      Disp.drawRectangle(BOARD_LEFT - 1, BOARD_TOP - 1, BOARD_RIGHT - BOARD_LEFT + 3, BOARD_BOTTOM - BOARD_TOP + 3, PIT_COLOR);
+      Disp.fillRectangle(BOARD_LEFT, BOARD_TOP, BOARD_RIGHT - BOARD_LEFT + 1, BOARD_BOTTOM - BOARD_TOP + 1, BG_COLOR);
 
       scoreBoard();
 
@@ -224,8 +226,8 @@ class Tetris
           chooseNewShape();
 
           // draw next box
+          Disp.drawRectangle(NEXT_BOX_LEFT - 1, NEXT_BOX_TOP - 1, NEXT_BOX_WIDTH + 2, NEXT_BOX_HEIGHT + 2, PIT_COLOR);
           Disp.fillRectangle(NEXT_BOX_LEFT, NEXT_BOX_TOP, NEXT_BOX_WIDTH, NEXT_BOX_HEIGHT, BLACK);
-          Disp.drawRectangle(NEXT_BOX_LEFT - 1, NEXT_BOX_TOP - 1, NEXT_BOX_WIDTH + 2, NEXT_BOX_HEIGHT + 2, WHITE);
           byte *shape = all_shapes[next[next_c]];
           for ( int i = 0; i < 4; i++ )
           {
@@ -233,8 +235,8 @@ class Tetris
             Disp.fillRectangleUseBevel(
               NEXT_BOX_LEFT + BLOCK_SIZE + block[0] * BLOCK_SIZE,
               NEXT_BOX_TOP + BLOCK_SIZE + block[1] * BLOCK_SIZE,
-              BLOCK_SIZE - 1,
-              BLOCK_SIZE - 1,
+              BLOCK_SIZE,
+              BLOCK_SIZE,
               colors[next[next_c]]);
           }
 
@@ -272,8 +274,8 @@ class Tetris
 
     void gameOver()
     {
-      Disp.drawCenteredString("Game ", MAX_Y / 6, 4, RED);
-      Disp.drawCenteredString("Over!", (MAX_Y / 6) + FONT_4X_HEIGHT + MARGIN, 4, RED);
+      Disp.drawCenteredString("GAME", GAME_OVER_TOP, 4, RED);
+      Disp.drawCenteredString("OVER", GAME_OVER_TOP + FONT_4X_HEIGHT + MARGIN, 4, RED);
 
       Beeping::beep(600, 200);
       delay(300);
@@ -406,8 +408,8 @@ class Tetris
         Disp.fillRectangleUseBevel(
           BOARD_LEFT + block[0] * BLOCK_SIZE + BLOCK_SIZE * x,
           BOARD_TOP + block[1] * BLOCK_SIZE + BLOCK_SIZE * y,
-          BLOCK_SIZE - 1,
-          BLOCK_SIZE - 1,
+          BLOCK_SIZE,
+          BLOCK_SIZE,
           colors[current]);
 
         board[block[1] + y][block[0] + x] = 255;
@@ -424,8 +426,8 @@ class Tetris
         Disp.fillRectangle(
           BOARD_LEFT + block[0] * BLOCK_SIZE + BLOCK_SIZE * old.x,
           BOARD_TOP + block[1] * BLOCK_SIZE + BLOCK_SIZE * old.y,
-          BLOCK_SIZE - 1,
-          BLOCK_SIZE - 1,
+          BLOCK_SIZE,
+          BLOCK_SIZE,
           BG_COLOR);
       }
 
@@ -514,15 +516,15 @@ class Tetris
               Disp.fillRectangle(
                 BOARD_LEFT + BLOCK_SIZE * c,
                 BOARD_TOP + BLOCK_SIZE * row,
-                BLOCK_SIZE - 1,
-                BLOCK_SIZE - 1,
+                BLOCK_SIZE,
+                BLOCK_SIZE,
                 BLACK);
             } else {
               Disp.fillRectangleUseBevel(
                 BOARD_LEFT + BLOCK_SIZE * c,
                 BOARD_TOP + BLOCK_SIZE * row,
-                BLOCK_SIZE - 1,
-                BLOCK_SIZE - 1,
+                BLOCK_SIZE,
+                BLOCK_SIZE,
                 colors[v - 1]);
             }
           }
@@ -533,8 +535,6 @@ class Tetris
         {
           board[0][c] = 0;
         }
-
-        Disp.fillRectangle(BOARD_LEFT, 0, BOARD_RIGHT - BOARD_LEFT, BLOCK_SIZE, BLACK);
       }
 
       delay(350);
@@ -542,12 +542,12 @@ class Tetris
 
     void scoreBoard()
     {
-      Disp.drawRectangle(MARGIN, MARGIN, SCORE_BOARD_WIDTH, SCORE_BOARD_HEIGHT, WHITE);
-      Disp.fillRectangle(MARGIN + 1, MARGIN + 1, SCORE_BOARD_WIDTH - 2, SCORE_BOARD_HEIGHT - 2, BLACK);
+      Disp.drawRectangle(MARGIN - 1, MARGIN - 1, SCORE_BOARD_WIDTH + 2, SCORE_BOARD_HEIGHT + 2, PIT_COLOR);
+      Disp.fillRectangle(MARGIN, MARGIN, SCORE_BOARD_WIDTH, SCORE_BOARD_HEIGHT, BLACK);
       Disp.drawString("Level", MARGIN * 2, MARGIN * 2, 1, YELLOW);
-      Disp.drawNumber(level, (MARGIN * 3) + (FONT_1X_WIDTH * 6), MARGIN * 2, 1, WHITE);
-      Disp.drawString("Lines", MARGIN * 2, MARGIN * 3 + FONT_1X_HEIGHT, 1, CYAN);
-      Disp.drawNumber(lines, (MARGIN * 3) + (FONT_1X_WIDTH * 6), MARGIN * 3 + FONT_1X_HEIGHT, 1, WHITE);
+      Disp.drawNumber(level, MARGIN * 2, (MARGIN * 3) + FONT_1X_HEIGHT, 1, WHITE);
+      Disp.drawString("Lines", MARGIN * 2, (MARGIN * 4) + (FONT_1X_HEIGHT * 2), 1, CYAN);
+      Disp.drawNumber(lines, MARGIN * 2, (MARGIN * 5) + (FONT_1X_HEIGHT *3), 1, WHITE);
     }
 
     // create a sequence of 7 random shapes

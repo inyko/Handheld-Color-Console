@@ -16,24 +16,20 @@
   #define MIN_Y 0
   #define MAX_X 159
   #define MAX_Y 127
-  #define FONT_4X ucg_font_osb29_hr
-  #define FONT_4X_WIDTH 18
-  #define FONT_4X_HEIGHT 40
-  #define FONT_1X ucg_font_helvB08_tr
-  #define FONT_1X_WIDTH 5
-  #define FONT_1X_HEIGHT 11
-#elif ARDUINO_AVR_LEONARDO
+  #define FONT_4X ucg_font_osb35_tr
+  #define FONT_4X_HEIGHT 49
+  #define FONT_1X ucg_font_6x13B_tr
+  #define FONT_1X_HEIGHT 13
+#elif ARDUINO_AVR_PROMICRO
   //display resolution 96*64
   #define MIN_X 0
   #define MIN_Y 0
   #define MAX_X 95
   #define MAX_Y 63
-  #define FONT_4X ucg_font_osb18_hr
-  #define FONT_4X_WIDTH 10
+  #define FONT_4X ucg_font_osr18_tr
   #define FONT_4X_HEIGHT 26
-  #define FONT_1X ucg_font_blipfest_07_tr
-  #define FONT_1X_WIDTH 3
-  #define FONT_1X_HEIGHT 6
+  #define FONT_1X ucg_font_5x7_tr
+  #define FONT_1X_HEIGHT 7
 #else
   /* define your own setting here */
 #endif
@@ -84,7 +80,6 @@ class DISP
     void drawTriangle(int poX0, int poY0, int poX1, int poY1, int poX2, int poY2, uint16_t color);
 
     void setFontSize(uint8_t font_size);
-    uint8_t fontWidth(uint8_t font_size);
     uint8_t drawNumber(long long_num, uint16_t poX, uint16_t poY, uint8_t font_size, uint16_t fgcolor);
     uint8_t drawFloat(float floatNumber, uint16_t poX, uint16_t poY, uint8_t font_size, uint16_t fgcolor);
     uint8_t drawString(char *string, uint16_t poX, uint16_t poY, uint8_t font_size, uint16_t fgcolor);

@@ -9,7 +9,7 @@
 
 #ifdef ARDUINO_AVR_ESPLORA
   Ucglib_ST7735_18x128x160_HWSPI ucg(/*cd=*/ 0, /*cs=*/ 7, /*reset=*/ 1);
-#elif ARDUINO_AVR_LEONARDO
+#elif ARDUINO_AVR_PROMICRO
   Ucglib_SSD1331_18x96x64_UNIVISION_HWSPI ucg(/*cd=*/ 19, /*cs=*/ 10, /*reset=*/ 18);
 #else
   /* define your own setting here */
@@ -66,7 +66,7 @@ void DISP::init (void)
 
 #ifdef ARDUINO_AVR_ESPLORA
   ucg.setRotate270();
-#elif ARDUINO_AVR_LEONARDO
+#elif ARDUINO_AVR_PROMICRO
 #else
   /* define your own setting here */
 #endif
@@ -133,11 +133,11 @@ void DISP::fillRectangleUseBevel(uint16_t poX, uint16_t poY, uint16_t w, uint16_
   setColor(0, color);
   ucg.drawBox(poX, poY, w, h);
 
-  setColor(0, WHITE);
+  setColor(0, color | 0b1100011000011000); // lighter
   ucg.drawHLine(poX, poY, w - 1);
 
-  setColor(0, BLACK);
-  ucg.drawHLine(poX + 1, poY + h - 1, w - 2);
+  setColor(0, color & 0b0011100111100111); // darker
+  ucg.drawHLine(poX + 1, poY + h - 1, w - 1);
   ucg.drawVLine(poX + w - 1, poY + 1, h - 1);
 }
 
@@ -180,11 +180,6 @@ void DISP::setFontSize(uint8_t font_size)
   }
 }
 
-uint8_t DISP::fontWidth(uint8_t font_size)
-{
-  return (font_size == 4) ? FONT_4X_WIDTH : FONT_1X_WIDTH;
-}
-
 uint8_t DISP::drawNumber(long long_num, uint16_t poX, uint16_t poY, uint8_t font_size, uint16_t fgcolor)
 {
   setColor(0, fgcolor);
@@ -217,7 +212,8 @@ void DISP::drawStringWithShadow(char *str, uint16_t poX, uint16_t poY, uint8_t f
 
 void DISP::drawCenteredString(char *str, uint16_t poY, uint8_t font_size, uint16_t fgcolor)
 {
-  uint16_t len = strlen(str) * fontWidth(font_size);
+  setFontSize(font_size);
+  uint16_t len = ucg.getStrWidth(str);
   uint16_t left = (len > MAX_X) ? 0 : ((MAX_X - len) / 2);
 
   drawStringWithShadow(str, left, poY, font_size, fgcolor, GRAY1);

@@ -27,7 +27,13 @@
 
 #include <Arduino.h>
 
-#define SPEAKER 6
+#ifdef ARDUINO_AVR_ESPLORA
+  #define SPEAKER 6
+#elif ARDUINO_AVR_PROMICRO
+  #define SPEAKER 21
+#else
+  #define SPEAKER 3
+#endif
 
 #define NOTE_B2	123
 #define NOTE_C3	131

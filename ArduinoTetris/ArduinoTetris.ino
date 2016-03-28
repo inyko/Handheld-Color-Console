@@ -35,6 +35,8 @@
 #include "tetris.cpp"
 #include "sequencer.cpp"
 
+Tetris t;
+
 void setup() {
   Sequencer::init();
 
@@ -48,8 +50,6 @@ void setup() {
 }
 
 void loop() {
-  Tetris t;
-
   // title screen
   t.drawPreGameScreen();
 
