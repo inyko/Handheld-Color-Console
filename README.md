@@ -10,7 +10,7 @@ Handheld color console based on Atmega328 with Arduino bootloader.
 
 ###Ported to Ucglib
 
-![Esplora Demo](https://youtu.be/A19qIs0M_po)
+Esplora Demo: https://youtu.be/A19qIs0M_po
 
 ##Build instructions
 
