@@ -31,10 +31,13 @@
 #include "beeping.cpp"
 
 #ifdef ARDUINO_AVR_ESPLORA
+  #define RANDOM_PIN        27
   #define RANDOM_REFERENCE  4
 #elif ARDUINO_AVR_PROMICRO
-  #define RANDOM_REFERENCE  3
+  #define RANDOM_PIN        27
+  #define RANDOM_REFERENCE  4
 #else
+  #define RANDOM_PIN        16
   #define RANDOM_REFERENCE  2
 #endif
 
@@ -134,7 +137,6 @@ class Tetris
 
     byte shapes[7] = {4, 4, 1, 2, 2, 4, 2};
 
-
     // game progress
 
     int lines, level;
@@ -166,6 +168,15 @@ class Tetris
     {
     }
 
+    void init()
+    {
+      // RANDOM_REFERENCE analog pin MUST NOT be connected to anything...
+      pinMode(RANDOM_PIN, INPUT);
+      randomSeed(analogRead(RANDOM_REFERENCE));
+      random(7);
+      random(7);
+    }
+
     void drawPreGameScreen()
     {
       Disp.drawGradientBox(0, 0, MAX_X + 1, MAX_Y + 1, RED, MAROON, GREEN, DARKGREEN);
@@ -176,12 +187,7 @@ class Tetris
 
     void run()
     {
-      // RANDOM_REFERENCE analog pin MUST NOT be connected to anything...
-
-      randomSeed(analogRead(RANDOM_REFERENCE));
-
       // clear board
-
       for ( int i = 0; i < BOARD_WIDTH; i++ )
       {
         for ( int j = 0; j < BOARD_HEIGHT; j++)

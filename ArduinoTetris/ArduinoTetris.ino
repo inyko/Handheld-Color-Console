@@ -38,6 +38,8 @@
 Tetris t;
 
 void setup() {
+  t.init();
+
   Sequencer::init();
 
   Disp.init();  // init display library
